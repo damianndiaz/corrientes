@@ -26,6 +26,14 @@ def append_to_jsonl(jsonl_file, record):
     with open(jsonl_file, 'a', encoding='utf-8') as f:
         f.write(json.dumps(record, ensure_ascii=False) + '\n')
 
+def clear_and_write_jsonl(jsonl_file, records):
+    """Reemplaza completamente el contenido del archivo JSONL"""
+    Path(jsonl_file).parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(jsonl_file, 'w', encoding='utf-8') as f:
+        for record in records:
+            f.write(json.dumps(record, ensure_ascii=False) + '\n')
+
 def create_run_record(db_path):
     runs_file = Path(db_path) / 'runs.jsonl'
     run_details_file = Path(db_path) / 'run_details.jsonl'
@@ -59,37 +67,44 @@ def create_page_records(db_path, processed_pages):
     pages_html_file = Path(db_path) / 'pages_html.jsonl'
     pages_png_file = Path(db_path) / 'pages_png.jsonl'
     
+    # Preparar todos los registros en memoria antes de escribir
+    pages_records = []
+    html_records = []
+    png_records = []
     page_ids = []
     
-    for url, html_path, png_path in processed_pages:
-        # Crear registro en pages_html.jsonl
-        html_id = get_next_id(pages_html_file)
+    current_timestamp = int(time.time())
+    
+    for i, (url, html_path, png_path) in enumerate(processed_pages, 1):
+        # Registro HTML
         html_record = {
-            'id': html_id,
+            'id': i,
             'path': html_path
         }
-        append_to_jsonl(pages_html_file, html_record)
+        html_records.append(html_record)
         
-        # Crear registro en pages_png.jsonl
-        png_id = get_next_id(pages_png_file)
+        # Registro PNG
         png_record = {
-            'id': png_id,
+            'id': i,
             'path': png_path
         }
-        append_to_jsonl(pages_png_file, png_record)
+        png_records.append(png_record)
         
-        # Crear registro en pages.jsonl
-        page_id = get_next_id(pages_file)
+        # Registro página principal
         page_record = {
-            'id': page_id,
+            'id': i,
             'url': url,
-            'pages_png_id': png_id,
-            'pages_html_id': html_id,
-            'timestamp': int(time.time())
+            'pages_png_id': i,
+            'pages_html_id': i,
+            'timestamp': current_timestamp
         }
-        append_to_jsonl(pages_file, page_record)
-        
-        page_ids.append(page_id)
+        pages_records.append(page_record)
+        page_ids.append(i)
+    
+    # Reemplazar completamente los archivos con datos frescos
+    clear_and_write_jsonl(pages_file, pages_records)
+    clear_and_write_jsonl(pages_html_file, html_records)
+    clear_and_write_jsonl(pages_png_file, png_records)
     
     return page_ids
 
