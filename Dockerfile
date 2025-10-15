@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     xdg-utils \
     libxss1 \
+    sqlite3 \
+    libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Crear directorios de trabajo
