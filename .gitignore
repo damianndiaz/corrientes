@@ -1,0 +1,76 @@
+# =============================================================================
+# .gitignore - Corrientes Licitaciones Scraper
+# =============================================================================
+# Archivos y carpetas que NO deben subirse a GitHub
+
+# 📊 Datos generados (base de datos JSONL)
+db/
+!db/.gitkeep
+
+# 📂 Archivos descargados (HTML y PNG)
+docs/
+!docs/.gitkeep
+!docs/pages_html/.gitkeep
+!docs/pages_png/.gitkeep
+
+# 📋 Logs del sistema
+logs/
+!logs/.gitkeep
+
+# 💾 Backups automáticos
+backups/
+!backups/.gitkeep
+
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+
+# 🐳 Docker
+.dockerignore
+docker-compose.override.yml
+
+# 💻 Sistema operativo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 🔧 IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 📦 Dependencias Node.js (si las hay)
+node_modules/
+package-lock.json
+yarn.lock
+
+# 🔐 Credenciales y configuración local
+.env
+.env.local
+.env.*.local
+config/local.json
+secrets/
+
+# 📄 Logs específicos
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 🚀 Archivos de deploy
+.deploy/

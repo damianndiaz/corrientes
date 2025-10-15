@@ -1,0 +1,52 @@
+services:
+  scraping-corrientes:
+    build: .
+    container_name: corrientes-scraper
+    restart: unless-stopped
+    
+    # Zona horaria
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+    
+    # Volúmenes para persistir datos
+    volumes:
+      # Logs del cron job
+      - ./logs:/app/logs
+      
+      # Base de datos JSONL
+      - ./db:/app/db
+      
+      # Archivos descargados (HTML y PNG)
+      - ./docs:/app/docs
+      
+      # Backups automáticos
+      - ./backups:/app/backups
+      
+      # Código fuente (para desarrollo)
+      - .:/app
+    
+    # Configuración de red (opcional)
+    # ports:
+    #   - "8080:8080"  # Si necesitas exponer algún puerto
+    
+    # Límites de recursos (opcional)
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    
+    # Healthcheck (opcional)
+    healthcheck:
+      test: ["CMD", "pgrep", "cron"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# Configuración de volúmenes (opcional)
+volumes:
+  logs:
+  database:
+  documents:
+  backups:
