@@ -56,7 +56,7 @@ RUN crontab /etc/cron.d/scraping-corrientes
 # Crear un script de entrada para iniciar cron
 RUN echo '#!/bin/bash\n\
 echo "Iniciando servicio cron para scraping de Corrientes..."\n\
-echo "Cron job configurado para ejecutar diariamente a las 9:00 AM"\n\
+echo "Cron job configurado para ejecutar diariamente a las 11:00 AM"\n\
 echo "Logs disponibles en /app/logs/"\n\
 echo "Para ejecutar manualmente: /app/scripts/cron_job.sh"\n\
 echo "================================================"\n\

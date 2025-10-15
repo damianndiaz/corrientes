@@ -1,12 +1,3 @@
-# =============================================================================
-# .gitignore - Corrientes Licitaciones Scraper
-# =============================================================================
-# Archivos y carpetas que NO deben subirse a GitHub
-
-# 📊 Datos generados (base de datos JSONL)
-db/
-!db/.gitkeep
-
 # 📂 Archivos descargados (HTML y PNG)
 docs/
 !docs/.gitkeep
