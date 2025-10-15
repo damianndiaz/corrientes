@@ -7,29 +7,43 @@ def download_html(url, folder_path, file_name):
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         
-        page.goto(url, wait_until='networkidle', timeout=60000)
-        html = page.content()
-        
-        Path(folder_path).mkdir(parents=True, exist_ok=True)
-        file_path = Path(folder_path) / file_name
-        file_path.write_text(html, encoding='utf-8')
-        
-        browser.close()
-        return str(file_path)
+        try:
+            # Timeout más corto y wait_until menos estricto
+            page.goto(url, wait_until='domcontentloaded', timeout=30000)
+            html = page.content()
+            
+            Path(folder_path).mkdir(parents=True, exist_ok=True)
+            file_path = Path(folder_path) / file_name
+            file_path.write_text(html, encoding='utf-8')
+            
+            browser.close()
+            return str(file_path)
+            
+        except Exception as e:
+            print(f"❌ Error descargando HTML {url}: {e}")
+            browser.close()
+            return None
 
 def download_png(url, folder_path, file_name):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         
-        page.goto(url, wait_until='networkidle', timeout=60000)
-        
-        Path(folder_path).mkdir(parents=True, exist_ok=True)
-        file_path = Path(folder_path) / file_name
-        page.screenshot(path=str(file_path), full_page=True)
-        
-        browser.close()
-        return str(file_path)
+        try:
+            # Timeout más corto y wait_until menos estricto
+            page.goto(url, wait_until='domcontentloaded', timeout=30000)
+            
+            Path(folder_path).mkdir(parents=True, exist_ok=True)
+            file_path = Path(folder_path) / file_name
+            page.screenshot(path=str(file_path), full_page=True)
+            
+            browser.close()
+            return str(file_path)
+            
+        except Exception as e:
+            print(f"❌ Error descargando PNG {url}: {e}")
+            browser.close()
+            return None
 
 def find_pliego_links(url):
     with sync_playwright() as p:
@@ -67,20 +81,27 @@ def download_page_content(urls, docs_path):
     
     for i, url in enumerate(urls, 1):
         try:
+            print(f"🔄 Procesando {i}/{len(urls)}: {url}")
+            
             # Descargar HTML
             html_path = download_html(url, str(html_dir), f"{i}.html")
             
             # Tomar screenshot
             png_path = download_png(url, str(png_dir), f"{i}.png")
             
-            # Guardar paths relativos desde la raíz del proyecto
-            rel_html_path = os.path.join('docs', 'pages_html', f"{i}.html")
-            rel_png_path = os.path.join('docs', 'pages_png', f"{i}.png")
-            
-            results.append((url, rel_html_path, rel_png_path))
+            # Solo agregar si ambos se descargaron exitosamente
+            if html_path and png_path:
+                # Guardar paths relativos desde la raíz del proyecto
+                rel_html_path = os.path.join('docs', 'pages_html', f"{i}.html")
+                rel_png_path = os.path.join('docs', 'pages_png', f"{i}.png")
+                
+                results.append((url, rel_html_path, rel_png_path))
+                print(f"✅ Completado {i}/{len(urls)}")
+            else:
+                print(f"⚠️  Falló descarga para {url}")
             
         except Exception as e:
-            # Sin logging
+            print(f"❌ Error procesando {url}: {e}")
             continue
     
     return results
