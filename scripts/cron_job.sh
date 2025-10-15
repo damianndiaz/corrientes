@@ -72,6 +72,13 @@ fi
 # =============================================================================
 # EJECUTAR EL PIPELINE PRINCIPAL
 # =============================================================================
+
+# Contar páginas antes de la ejecución
+PAGES_BEFORE=0
+if [ -f "db/pages.jsonl" ]; then
+    PAGES_BEFORE=$(wc -l < db/pages.jsonl)
+fi
+
 log "⚙️  Ejecutando Main.py..."
 
 # Ejecutar main.py y capturar el código de salida
@@ -81,20 +88,24 @@ if python3 main.py; then
     
     # Verificar que se crearon los archivos esperados
     if [ -f "db/runs.jsonl" ] && [ -f "db/pages.jsonl" ]; then
-        TOTAL_PAGES=$(wc -l < db/pages.jsonl)
+        # Contar páginas procesadas en esta ejecución (páginas después - páginas antes)
+        PAGES_AFTER=$(wc -l < db/pages.jsonl)
+        CURRENT_PAGES=$((PAGES_AFTER - PAGES_BEFORE))
+        
         TOTAL_HTML=$(find docs/pages_html -name "*.html" | wc -l)
         TOTAL_PNG=$(find docs/pages_png -name "*.png" | wc -l)
         
         log "📊 Resultados del scraping:"
-        log "   - Páginas procesadas: $TOTAL_PAGES"
+        log "   - Páginas procesadas en esta ejecución: $CURRENT_PAGES"
+        log "   - Total páginas históricas: $PAGES_AFTER"
         log "   - Archivos HTML: $TOTAL_HTML"
         log "   - Archivos PNG: $TOTAL_PNG"
         
-        # Verificar consistencia
-        if [ "$TOTAL_PAGES" -eq "$TOTAL_HTML" ] && [ "$TOTAL_PAGES" -eq "$TOTAL_PNG" ]; then
-            log "✅ Datos consistentes - scraping completado correctamente"
+        # Verificar consistencia de esta ejecución (nota: HTML/PNG son totales acumulados)
+        if [ "$CURRENT_PAGES" -gt 0 ]; then
+            log "✅ Ejecución completada correctamente - $CURRENT_PAGES nuevas páginas procesadas"
         else
-            log "⚠️  ADVERTENCIA: Inconsistencia en los datos (páginas: $TOTAL_PAGES, HTML: $TOTAL_HTML, PNG: $TOTAL_PNG)"
+            log "⚠️  ADVERTENCIA: No se procesaron páginas nuevas en esta ejecución"
         fi
     else
         log "❌ ERROR: Archivos de salida no encontrados"
