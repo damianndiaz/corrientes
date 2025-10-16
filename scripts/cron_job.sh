@@ -75,12 +75,6 @@ fi
 # EJECUTAR EL PIPELINE PRINCIPAL
 # =============================================================================
 
-# Contar páginas antes de la ejecución
-PAGES_BEFORE=0
-if [ -f "db/pages.jsonl" ]; then
-    PAGES_BEFORE=$(wc -l < db/pages.jsonl)
-fi
-
 log "⚙️  Ejecutando Main.py..."
 
 # Ejecutar main.py y capturar el código de salida
@@ -100,29 +94,28 @@ if $PYTHON_CMD main.py; then
     EXIT_CODE=$?
     log "✅ Pipeline ejecutado exitosamente (código: $EXIT_CODE)"
     
-    # Verificar que se crearon los archivos esperados
-    if [ -f "db/runs.jsonl" ] && [ -f "db/pages.jsonl" ]; then
-        # Contar páginas procesadas en esta ejecución (páginas después - páginas antes)
-        PAGES_AFTER=$(wc -l < db/pages.jsonl)
-        CURRENT_PAGES=$((PAGES_AFTER - PAGES_BEFORE))
-        
-        TOTAL_HTML=$(find docs/pages_html -name "*.html" | wc -l)
-        TOTAL_PNG=$(find docs/pages_png -name "*.png" | wc -l)
+    # Verificar que se creó la base de datos SQLite
+    if [ -f "db/licitar.db" ]; then
+        # Usar SQLite para obtener estadísticas de la última ejecución
+        CURRENT_PAGES=$(sqlite3 db/licitar.db "SELECT COUNT(*) FROM licitaciones WHERE run_id = (SELECT MAX(id) FROM runs);")
+        TOTAL_PAGES=$(sqlite3 db/licitar.db "SELECT COUNT(*) FROM licitaciones;")
+        TOTAL_HTML=$(find docs/pages_html -name "*.html" 2>/dev/null | wc -l)
+        TOTAL_PNG=$(find docs/pages_png -name "*.png" 2>/dev/null | wc -l)
         
         log "📊 Resultados del scraping:"
         log "   - Páginas procesadas en esta ejecución: $CURRENT_PAGES"
-        log "   - Total páginas históricas: $PAGES_AFTER"
+        log "   - Total páginas históricas: $TOTAL_PAGES"
         log "   - Archivos HTML: $TOTAL_HTML"
         log "   - Archivos PNG: $TOTAL_PNG"
         
-        # Verificar consistencia de esta ejecución (nota: HTML/PNG son totales acumulados)
+        # Verificar consistencia de esta ejecución
         if [ "$CURRENT_PAGES" -gt 0 ]; then
             log "✅ Ejecución completada correctamente - $CURRENT_PAGES nuevas páginas procesadas"
         else
             log "⚠️  ADVERTENCIA: No se procesaron páginas nuevas en esta ejecución"
         fi
     else
-        log "❌ ERROR: Archivos de salida no encontrados"
+        log "❌ ERROR: Base de datos SQLite no encontrada"
         exit 1
     fi
 else

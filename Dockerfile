@@ -45,8 +45,8 @@ RUN python -m playwright install-deps chromium
 # Hacer ejecutable el script de cron
 RUN chmod +x /app/scripts/cron_job.sh
 
-# Configurar cron job para ejecutar diariamente a las 11:00 AM
-RUN echo "0 11 * * * root /app/scripts/cron_job.sh >> /app/logs/cron.log 2>&1" > /etc/cron.d/scraping-corrientes
+# Configurar cron job para ejecutar diariamente a las 13:00 (1:00 PM)
+RUN echo "0 13 * * * root /app/scripts/cron_job.sh >> /app/logs/cron.log 2>&1" > /etc/cron.d/scraping-corrientes
 
 # Dar permisos correctos al archivo de cron
 RUN chmod 0644 /etc/cron.d/scraping-corrientes
@@ -54,23 +54,11 @@ RUN chmod 0644 /etc/cron.d/scraping-corrientes
 # Aplicar el cron job
 RUN crontab /etc/cron.d/scraping-corrientes
 
-# Crear un script de entrada para iniciar cron
-RUN echo '#!/bin/bash\n\
-echo "Iniciando servicio cron para scraping de Corrientes..."\n\
-echo "Cron job configurado para ejecutar diariamente a las 11:00 AM"\n\
-echo "Logs disponibles en /app/logs/"\n\
-echo "Para ejecutar manualmente: /app/scripts/cron_job.sh"\n\
-echo "================================================"\n\
-service cron start\n\
-echo "Servicio cron iniciado"\n\
-\n\
-# Mantener el contenedor corriendo\n\
-tail -f /dev/null' > /app/start.sh
-
+# Hacer ejecutable el script de inicio
 RUN chmod +x /app/start.sh
 
 # Exponer directorio de logs como volumen
-VOLUME ["/app/logs", "/app/corrientes/db", "/app/corrientes/docs", "/app/backups"]
+VOLUME ["/app/logs", "/app/db", "/app/docs", "/app/backups"]
 
 # Comando por defecto
 CMD ["/app/start.sh"]
