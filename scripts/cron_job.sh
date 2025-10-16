@@ -82,7 +82,19 @@ fi
 log "⚙️  Ejecutando Main.py..."
 
 # Ejecutar main.py y capturar el código de salida
-if python3 main.py; then
+# Primero verificar que Python esté disponible
+if command -v python3 > /dev/null 2>&1; then
+    PYTHON_CMD="python3"
+elif command -v python > /dev/null 2>&1; then
+    PYTHON_CMD="python"
+else
+    log "❌ ERROR: No se encontró Python en el sistema"
+    exit 1
+fi
+
+log "🐍 Usando comando Python: $PYTHON_CMD"
+
+if $PYTHON_CMD main.py; then
     EXIT_CODE=$?
     log "✅ Pipeline ejecutado exitosamente (código: $EXIT_CODE)"
     

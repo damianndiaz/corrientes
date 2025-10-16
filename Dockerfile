@@ -35,7 +35,8 @@ COPY . /app/
 RUN mkdir -p /app/logs /app/backups
 
 # Instalar dependencias de Python
-RUN pip install --no-cache-dir playwright
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Instalar navegadores de Playwright
 RUN python -m playwright install chromium
