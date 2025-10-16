@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Configuración de logging
 LOG_FILE="/app/logs/cron_$(date +%Y%m%d).log"
 LOCK_FILE="/tmp/scraping_corrientes.lock"
