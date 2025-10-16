@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Configurar PATH para cron (cron tiene PATH limitado)
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
+
 # Configuración de logging
 LOG_FILE="/app/logs/cron_$(date +%Y%m%d).log"
 LOCK_FILE="/tmp/scraping_corrientes.lock"
@@ -78,13 +81,21 @@ fi
 log "⚙️  Ejecutando Main.py..."
 
 # Ejecutar main.py y capturar el código de salida
-# Primero verificar que Python esté disponible
-if command -v python3 > /dev/null 2>&1; then
+# Verificar que Python esté disponible con rutas explícitas
+if [ -x "/usr/local/bin/python3" ]; then
+    PYTHON_CMD="/usr/local/bin/python3"
+elif [ -x "/usr/bin/python3" ]; then
+    PYTHON_CMD="/usr/bin/python3"
+elif command -v python3 > /dev/null 2>&1; then
     PYTHON_CMD="python3"
 elif command -v python > /dev/null 2>&1; then
     PYTHON_CMD="python"
 else
     log "❌ ERROR: No se encontró Python en el sistema"
+    log "🔍 PATH actual: $PATH"
+    log "🔍 Verificando rutas comunes:"
+    ls -la /usr/bin/python* 2>/dev/null || log "   - No hay python en /usr/bin/"
+    ls -la /usr/local/bin/python* 2>/dev/null || log "   - No hay python en /usr/local/bin/"
     exit 1
 fi
 
