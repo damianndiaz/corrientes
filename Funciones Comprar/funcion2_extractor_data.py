@@ -15,23 +15,43 @@ class ExtractorDataCompleta(BaseScraper):
         print("\n📊 FUNCIÓN 2: EXTRAYENDO DATA COMPLETA DE LICITACIONES")
         print("=" * 80)
         
-        # Cargar links de la Función 1
+    async def extraer_data_completa(self, archivo_links=None, start_from=0, load_progress=None):
         links_data = self._cargar_links(archivo_links)
         
         if not links_data:
             print("❌ No se pudieron cargar los links. Ejecuta primero la Función 1.")
             return None
         
-        resultado_completo = {
-            'licitaciones_completas': [],
-            'estadisticas': {
-                'total_links_procesados': 0,
-                'total_extracciones_exitosas': 0,
-                'total_errores': 0,
-                'fecha_procesamiento': datetime.now().isoformat()
-            },
-            'errores_detallados': []
-        }
+        # Cargar progreso previo si existe
+        if load_progress:
+            try:
+                with open(load_progress, 'r', encoding='utf-8') as f:
+                    resultado_completo = json.load(f)
+                print(f"✅ Cargado progreso previo desde: {load_progress}")
+                print(f"   📊 Licitaciones ya procesadas: {len(resultado_completo['licitaciones_completas'])}")
+            except Exception as e:
+                print(f"⚠️  Error cargando progreso: {e}")
+                resultado_completo = {
+                    'licitaciones_completas': [],
+                    'estadisticas': {
+                        'total_links_procesados': 0,
+                        'total_extracciones_exitosas': 0,
+                        'total_errores': 0,
+                        'fecha_procesamiento': datetime.now().isoformat()
+                    },
+                    'errores_detallados': []
+                }
+        else:
+            resultado_completo = {
+                'licitaciones_completas': [],
+                'estadisticas': {
+                    'total_links_procesados': 0,
+                    'total_extracciones_exitosas': 0,
+                    'total_errores': 0,
+                    'fecha_procesamiento': datetime.now().isoformat()
+                },
+                'errores_detallados': []
+            }
         
         try:
             # Combinar todos los links
@@ -40,7 +60,7 @@ class ExtractorDataCompleta(BaseScraper):
             print(f"📋 Total de links a procesar: {len(todos_los_links)}")
             
             # Procesar cada link individualmente
-            await self._procesar_todos_los_links(todos_los_links, resultado_completo)
+            await self._procesar_todos_los_links(todos_los_links, resultado_completo, start_from)
             
             # Generar estadísticas finales
             self._generar_estadisticas_finales(resultado_completo)
@@ -78,13 +98,18 @@ class ExtractorDataCompleta(BaseScraper):
             print(f"❌ Error cargando links: {e}")
             return None
     
-    async def _procesar_todos_los_links(self, links, resultado_completo):
+    async def _procesar_todos_los_links(self, links, resultado_completo, start_from=0):
         total_links = len(links)
         
-        print(f"🚀 Iniciando procesamiento de {total_links} links...")
-        print(f"⏱️  Tiempo estimado: {(total_links * 3) // 60} minutos")
+        if start_from > 0:
+            print(f"🔄 REANUDANDO desde licitación {start_from + 1} de {total_links}")
+            links = links[start_from:]
+            print(f"📋 Links restantes a procesar: {len(links)}")
         
-        for i, link_info in enumerate(links, 1):
+        print(f"🚀 Iniciando procesamiento de {len(links)} links...")
+        print(f"⏱️  Tiempo estimado: {(len(links) * 3) // 60} minutos")
+        
+        for i, link_info in enumerate(links, start_from + 1):
             self.contador_procesados += 1
             
             # Mostrar progreso cada 50 links para no saturar la consola
@@ -536,7 +561,12 @@ async def main():
     
     try:
         await extractor.start_browser()
-        resultado = await extractor.extraer_data_completa()
+        
+        # Reanudar desde licitación 1200
+        resultado = await extractor.extraer_data_completa(
+            start_from=1200,
+            load_progress='funcion2_progreso_1200_20251119_181218.json'
+        )
         
         if resultado:
             print(f"\n🎉 ¡EXTRACCIÓN DE DATA COMPLETADA!")
